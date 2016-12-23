@@ -43,17 +43,7 @@ end
 
 % draw control polygonal
 plot(controlPoints(1,:),controlPoints(2,:),'g-');
-%the curve will have a degree of qx-1 point
-numberOfPoints=numberOfPoints - 1;
-%TODO use the min x e max y of control points instead of 0 and 1 
-%create a vector of 100 equally spaced points between 0 and 1 
-linearSpace=linspace(0,1,100);
-%calculate Bernstein base polynomial of grade equal to the number of
-%control points -1 and evaluated in the linear space t.
-bernsteinBase=bernsteinMatrix(numberOfPoints,linearSpace);
-%calculate the vector of x positions of the curve
-x=bernsteinBase*controlPoints(1,:)';
-%calculate the vector of y positions of the curve
-y=bernsteinBase*controlPoints(2,:)';
+%calculate bezier curve
+bezierCurve = calculateBezier(controlPoints,numberOfPoints);
 %draw red solid line bézier curve
-plot(x,y,'r-');
+plot(bezierCurve(1,:),bezierCurve(2,:),'r-');
