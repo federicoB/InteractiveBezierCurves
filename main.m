@@ -8,6 +8,8 @@ figureHandler.MenuBar='none';
 axis equal;
 %set axis limits
 axis([0 1 0 1]);
+ax = gca;
+ax.Units = 'pixels';
 %set hold state to on so adding new points doesn't delete old points
 hold on
 %call function to draw a new bezier curve
@@ -15,6 +17,7 @@ drawNewCurve();
 %when a curve is already draw, add the button to clear it and draw a new
 %curve
 btn = uicontrol('Style', 'pushbutton', 'String', 'Clear','Position', [20 20 60 30],'Callback', @(src,event)drawNewCurve);
+
 
 function drawNewCurve() 
     %clear current plots
@@ -24,6 +27,7 @@ function drawNewCurve()
     %initialize number of points counter
     numberOfPoints=0;
     %initialize control points vector
+    global controlPoints; 
     controlPoints = [];
     %matlab doesn't support do-while loop so first we set a true contition
     buttonClicked=1;
@@ -48,15 +52,57 @@ function drawNewCurve()
             controlPoints(1,numberOfPoints)=clickX;
             controlPoints(2,numberOfPoints)=clickY;
             %plot a blue cicle at the given coordinates
-            plot(controlPoints(1,numberOfPoints),controlPoints(2,numberOfPoints),'bo');
+            plot(controlPoints(1,numberOfPoints),controlPoints(2,numberOfPoints),'bo',...            
+                'LineWidth',4,'ButtonDownFcn',{@controlPointClicked,numberOfPoints});
         end
     end
-    if (~isempty(controlPoints)) 
+    drawCurve(numberOfPoints);
+end
+
+function drawCurve(numberOfPoints) 
+    global controlPoints; 
+    if (~isempty(controlPoints))
+        global controlPoly bezierPlot; 
+        delete(controlPoly);
+        delete(bezierPlot);
         % draw control polygonal
-        plot(controlPoints(1,:),controlPoints(2,:),'g-');
+        controlPoly = plot(controlPoints(1,:),controlPoints(2,:),'g-');
+        %uistack(controlPoly,'down');
         %calculate bezier curve
         bezierCurve = calculateBezier(controlPoints,numberOfPoints);
         %draw red solid line bézier curve
-        plot(bezierCurve(1,:),bezierCurve(2,:),'r-'); 
+        bezierPlot = plot(bezierCurve(1,:),bezierCurve(2,:),'r-'); 
     end
+end
+
+function controlPointClicked(src,event,controlPointIndex)
+    %get current figure handler
+    fig = gcf;
+    fig.WindowButtonMotionFcn = {@controlPointMoved,src,controlPointIndex};
+    fig.WindowButtonUpFcn = @dropObject;
+end
+
+function controlPointMoved(figureHandler,event,object,controlPointIndex) 
+    ax=gca;
+    axesPosition = get(ax,'Position');
+    width = axesPosition(3);
+    height = axesPosition(4);
+    newPos = get(figureHandler,'CurrentPoint');
+    newPos(1) = newPos(1) - axesPosition(1);
+    newPos(2) = newPos(2) - axesPosition(2);
+    newPos(1) = newPos(1)/width;
+    newPos(2) = newPos(2)/height;
+    set(object,'XData',newPos(1));
+    set(object,'YData',newPos(2));
+    global controlPoints; 
+    controlPoints(1,controlPointIndex)=newPos(1);
+    controlPoints(2,controlPointIndex)=newPos(2);
+    drawCurve(length(controlPoints));
+end
+
+function dropObject(src,event)
+    %get current figure handler
+    fig = gcf;
+    fig.WindowButtonMotionFcn = '';
+    fig.WindowButtonUpFcn = '';
 end
