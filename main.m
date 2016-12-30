@@ -50,27 +50,36 @@ function drawNewCurve()
             end
             %increase the number of points counter
             numberOfPoints=numberOfPoints+1;
-            %set in the qx/qy array the coordinate
+            %add the point to the control point array
             controlPoints(1,numberOfPoints)=clickX;
             controlPoints(2,numberOfPoints)=clickY;
             %plot a blue cicle at the given coordinates
             plot(controlPoints(1,numberOfPoints),controlPoints(2,numberOfPoints),'bo',...            
-                'LineWidth',4,'ButtonDownFcn',{@controlPointClicked,numberOfPoints});
+                'MarkerSize',10,'MarkerFaceColor','b',...
+                'ButtonDownFcn',{@controlPointClicked,numberOfPoints});
         end
     end
+    %draw the bezier curve on the current axis with the given control
+    %points
     drawBezierCurve(numberOfPoints);
 end
 
 %plot bezier curve with control polygonal given a set of points
 function drawBezierCurve(numberOfPoints) 
+    %redeclare controlPoints array, being global if it was already defined
+    %it will be already set
     global controlPoints; 
-    if (~isempty(controlPoints))
-        global controlPoly bezierPlot; 
-        delete(controlPoly);
+    global controlPolyPlot bezierPlot;
+    %delete old plots if already declared
+    if (~empty(controlPolyPlot)) 
+        delete(controlPolyPlot);
+    end
+    if (~empty(bezierPlot)) 
         delete(bezierPlot);
+    end
+    if (~isempty(controlPoints))
         % draw control polygonal
-        controlPoly = plot(controlPoints(1,:),controlPoints(2,:),'g-');
-        %uistack(controlPoly,'down');
+        controlPolyPlot = plot(controlPoints(1,:),controlPoints(2,:),'g-');
         %calculate bezier curve
         bezierCurve = calculateBezier(controlPoints,numberOfPoints);
         %draw red solid line bézier curve
@@ -78,34 +87,51 @@ function drawBezierCurve(numberOfPoints)
     end
 end
 
+%called upon click on control point, activates drag and drop
 function controlPointClicked(src,event,controlPointIndex)
     %get current figure handler
     fig = gcf;
+    %set a listener for mouse move event
     fig.WindowButtonMotionFcn = {@controlPointMoved,src,controlPointIndex};
+    %set a listener for mouse button relase event
     fig.WindowButtonUpFcn = @dropObject;
 end
 
+%called on drag of control point
 function controlPointMoved(figureHandler,event,object,controlPointIndex) 
+    %get current axes handler
     ax=gca;
+    %get the pixel position and dimension of the axes
     axesPosition = get(ax,'Position');
+    %axesPosition is an array of 4 element x,y,width and height
     width = axesPosition(3);
     height = axesPosition(4);
+    %get the current position of the mouse
     newPos = get(figureHandler,'CurrentPoint');
+    %calculate pixel offset related to axes position
     newPos(1) = newPos(1) - axesPosition(1);
     newPos(2) = newPos(2) - axesPosition(2);
+    %map pixel position to cartesian position
     newPos(1) = newPos(1)/width;
     newPos(2) = newPos(2)/height;
+    %update control point "plot"
     set(object,'XData',newPos(1));
     set(object,'YData',newPos(2));
+    %redeclare controlPoints for getting its global value
     global controlPoints; 
+    %update control point array
     controlPoints(1,controlPointIndex)=newPos(1);
     controlPoints(2,controlPointIndex)=newPos(2);
+    %re-draw bezier curve
     drawBezierCurve(length(controlPoints));
 end
 
+%called after clicked on a control point and relased the mouse button.
 function dropObject(src,event)
     %get current figure handler
     fig = gcf;
+    %remove listener for mouse move event
     fig.WindowButtonMotionFcn = '';
+    %remove listener for mouse button relase event
     fig.WindowButtonUpFcn = '';
 end
