@@ -70,13 +70,9 @@ function drawBezierCurve(numberOfPoints)
     %it will be already set
     global controlPoints; 
     global controlPolyPlot bezierPlot;
-    %delete old plots if already declared
-    if (~empty(controlPolyPlot)) 
-        delete(controlPolyPlot);
-    end
-    if (~empty(bezierPlot)) 
-        delete(bezierPlot);
-    end
+    %delete old plots 
+    delete(controlPolyPlot);
+    delete(bezierPlot);
     if (~isempty(controlPoints))
         % draw control polygonal
         controlPolyPlot = plot(controlPoints(1,:),controlPoints(2,:),'g-');
