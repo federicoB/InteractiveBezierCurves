@@ -8,7 +8,7 @@ numberOfPoints=numberOfPoints - 1;
 linearSpace=linspace(0,1,100);
 %calculate Bernstein base polynomial of grade equal to the number of
 %control points -1 and evaluated in the linear space t.
-bernsteinBase=bernsteinMatrix(numberOfPoints,linearSpace);
+bernsteinBase=bernstein(numberOfPoints,linearSpace);
 %calculate the vector of x positions of the curve
 bezierCurve(1,:)=bernsteinBase*controlPoints(1,:)';
 %calculate the vector of y positions of the curve
