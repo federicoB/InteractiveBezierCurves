@@ -8,8 +8,11 @@ figureHandler.MenuBar='none';
 axis equal;
 %set axis limits
 axis([0 1 0 1]);
-ax = gca;
-ax.Units = 'pixels';
+%get the current axis handler
+currentAxis = gca;
+%set the unit of measurement to pixel
+%ginput() and plot() still use dimension based on cartesian coordinate
+currentAxis.Units = 'pixels';
 %set hold state to on so adding new points doesn't delete old points
 hold on
 %call function to draw a new bezier curve
@@ -18,16 +21,17 @@ drawNewCurve();
 %curve
 btn = uicontrol('Style', 'pushbutton', 'String', 'Clear','Position', [20 20 60 30],'Callback', @(src,event)drawNewCurve);
 
-
+%clear the graph and ask the user a set of points for a new bezier curve
 function drawNewCurve() 
     %clear current plots
     cla;
-    %define flag for knowing if the user want a closed line
-    closed=0;
     %initialize number of points counter
     numberOfPoints=0;
     %initialize control points vector
+    %it's global for avoiding matlab way of passing parameter value on
+    %callback definition not  on callback call following an event
     global controlPoints; 
+    %initialize control points to empty vector
     controlPoints = [];
     %matlab doesn't support do-while loop so first we set a true contition
     buttonClicked=1;
@@ -39,8 +43,6 @@ function drawNewCurve()
         if (buttonClicked==1) || (buttonClicked==2)
             %if the central mouse buton is pressed
             if buttonClicked==2
-                %set the curve as a closed curve
-                closed=1;
                 %set the control point equal to the first control point for closing
                 %the curve
                 clickX=controlPoints(1,1);
@@ -56,10 +58,11 @@ function drawNewCurve()
                 'LineWidth',4,'ButtonDownFcn',{@controlPointClicked,numberOfPoints});
         end
     end
-    drawCurve(numberOfPoints);
+    drawBezierCurve(numberOfPoints);
 end
 
-function drawCurve(numberOfPoints) 
+%plot bezier curve with control polygonal given a set of points
+function drawBezierCurve(numberOfPoints) 
     global controlPoints; 
     if (~isempty(controlPoints))
         global controlPoly bezierPlot; 
@@ -97,7 +100,7 @@ function controlPointMoved(figureHandler,event,object,controlPointIndex)
     global controlPoints; 
     controlPoints(1,controlPointIndex)=newPos(1);
     controlPoints(2,controlPointIndex)=newPos(2);
-    drawCurve(length(controlPoints));
+    drawBezierCurve(length(controlPoints));
 end
 
 function dropObject(src,event)
