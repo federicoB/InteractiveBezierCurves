@@ -76,15 +76,21 @@ function drawBezierCurve(numberOfPoints)
     if (~isempty(controlPoints))
         % draw control polygonal
         controlPolyPlot = plot(controlPoints(1,:),controlPoints(2,:),'g-');
+        %move the control polygonal to minimum z-index for better
+        %click detection on control points
+        uistack(controlPolyPlot,'bottom');
         %calculate bezier curve
         bezierCurve = calculateBezier(controlPoints,numberOfPoints);
         %draw red solid line bézier curve
         bezierPlot = plot(bezierCurve(1,:),bezierCurve(2,:),'r-'); 
+        %move the bezier curve plot to minimum z-index for better
+        %click detection on control points
+        uistack(bezierPlot,'bottom');
     end
 end
 
 %called upon click on control point, activates drag and drop
-function controlPointClicked(src,event,controlPointIndex)
+function controlPointClicked(src,~,controlPointIndex)
     %get current figure handler
     fig = gcf;
     %set a listener for mouse move event
@@ -94,7 +100,7 @@ function controlPointClicked(src,event,controlPointIndex)
 end
 
 %called on drag of control point
-function controlPointMoved(figureHandler,event,object,controlPointIndex) 
+function controlPointMoved(figureHandler,~,object,controlPointIndex) 
     %get current axes handler
     ax=gca;
     %get the pixel position and dimension of the axes
@@ -123,7 +129,7 @@ function controlPointMoved(figureHandler,event,object,controlPointIndex)
 end
 
 %called after clicked on a control point and relased the mouse button.
-function dropObject(src,event)
+function dropObject(~,~)
     %get current figure handler
     fig = gcf;
     %remove listener for mouse move event
