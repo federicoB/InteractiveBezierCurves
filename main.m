@@ -51,6 +51,7 @@ function drawNewCurve()
             %increase the number of points counter
             numberOfPoints=numberOfPoints+1;
             %add the point to the control point array
+            %TODO use end+1 for increasing size
             controlPoints(1,numberOfPoints)=clickX;
             controlPoints(2,numberOfPoints)=clickY;
             %plot a blue cicle at the given coordinates
