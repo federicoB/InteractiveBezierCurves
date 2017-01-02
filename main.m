@@ -51,17 +51,18 @@ function drawNewCurve()
             %add the point to the control point array
             %TODO use end+1 for increasing size
             controlPoints(1,end+1)=clickX;
-            controlPoints(2,end+1)=clickY;
+            controlPoints(2,end)=clickY;
             %plot a blue cicle at the given coordinates
             plot(controlPoints(1,end),controlPoints(2,end),'bo',...
                 'MarkerSize',10,'MarkerFaceColor','b',...
-                'ButtonDownFcn',{@controlPointClicked,});
+                'ButtonDownFcn',{@controlPointClicked,controlPointIndex});
+            %increse the control point index
             controlPointIndex=controlPointIndex+1;
         end
     end
     %draw the bezier curve on the current axis with the given control
     %points
-    drawBezierCurve(numberOfPoints);
+    drawBezierCurve();
 end
 
 %plot bezier curve with control polygonal given a set of points
