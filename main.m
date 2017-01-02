@@ -3,7 +3,7 @@ clear
 %create a figure with defined title and hide showing figure number in title
 figureHandler=figure('Name','Interactive Bezier Curves','NumberTitle','off');
 %hide the menu
-figureHandler.MenuBar='none'; 
+figureHandler.MenuBar='none';
 %use the same length for the data units along each axis
 axis equal;
 %set axis limits
@@ -22,17 +22,17 @@ drawNewCurve();
 btn = uicontrol('Style', 'pushbutton', 'String', 'Clear','Position', [20 20 60 30],'Callback', @(src,event)drawNewCurve);
 
 %clear the graph and ask the user a set of points for a new bezier curve
-function drawNewCurve() 
+function drawNewCurve()
     %clear current plots
     cla;
-    %initialize number of points counter
-    numberOfPoints=0;
     %initialize control points vector
     %it's global for avoiding matlab way of passing parameter value on
     %callback definition not  on callback call following an event
-    global controlPoints; 
+    global controlPoints;
     %initialize control points to empty vector
     controlPoints = [];
+    %initialize control point index
+    controlPointIndex=0;
     %matlab doesn't support do-while loop so first we set a true contition
     buttonClicked=1;
     %while the user had clicked the left mouse button
@@ -48,16 +48,15 @@ function drawNewCurve()
                 clickX=controlPoints(1,1);
                 clickY=controlPoints(2,1);
             end
-            %increase the number of points counter
-            numberOfPoints=numberOfPoints+1;
             %add the point to the control point array
             %TODO use end+1 for increasing size
-            controlPoints(1,numberOfPoints)=clickX;
-            controlPoints(2,numberOfPoints)=clickY;
+            controlPoints(1,end+1)=clickX;
+            controlPoints(2,end+1)=clickY;
             %plot a blue cicle at the given coordinates
-            plot(controlPoints(1,numberOfPoints),controlPoints(2,numberOfPoints),'bo',...            
+            plot(controlPoints(1,end),controlPoints(2,end),'bo',...
                 'MarkerSize',10,'MarkerFaceColor','b',...
-                'ButtonDownFcn',{@controlPointClicked,numberOfPoints});
+                'ButtonDownFcn',{@controlPointClicked,});
+            controlPointIndex=controlPointIndex+1;
         end
     end
     %draw the bezier curve on the current axis with the given control
@@ -66,12 +65,12 @@ function drawNewCurve()
 end
 
 %plot bezier curve with control polygonal given a set of points
-function drawBezierCurve(numberOfPoints) 
+function drawBezierCurve()
     %redeclare controlPoints array, being global if it was already defined
     %it will be already set
-    global controlPoints; 
+    global controlPoints;
     global controlPolyPlot bezierPlot;
-    %delete old plots 
+    %delete old plots
     delete(controlPolyPlot);
     delete(bezierPlot);
     if (~isempty(controlPoints))
@@ -81,9 +80,9 @@ function drawBezierCurve(numberOfPoints)
         %click detection on control points
         uistack(controlPolyPlot,'bottom');
         %calculate bezier curve
-        bezierCurve = calculateBezier(controlPoints,numberOfPoints);
+        bezierCurve = calculateBezier(controlPoints);
         %draw red solid line bézier curve
-        bezierPlot = plot(bezierCurve(1,:),bezierCurve(2,:),'r-'); 
+        bezierPlot = plot(bezierCurve(1,:),bezierCurve(2,:),'r-');
         %move the bezier curve plot to minimum z-index for better
         %click detection on control points
         uistack(bezierPlot,'bottom');
@@ -101,7 +100,7 @@ function controlPointClicked(src,~,controlPointIndex)
 end
 
 %called on drag of control point
-function controlPointMoved(figureHandler,~,object,controlPointIndex) 
+function controlPointMoved(figureHandler,~,object,controlPointIndex)
     %get current axes handler
     ax=gca;
     %get the pixel position and dimension of the axes
@@ -121,7 +120,7 @@ function controlPointMoved(figureHandler,~,object,controlPointIndex)
     set(object,'XData',newPos(1));
     set(object,'YData',newPos(2));
     %redeclare controlPoints for getting its global value
-    global controlPoints; 
+    global controlPoints;
     %update control point array
     controlPoints(1,controlPointIndex)=newPos(1);
     controlPoints(2,controlPointIndex)=newPos(2);
