@@ -48,6 +48,8 @@ function drawNewCurve()
                 clickX=controlPoints(1,1);
                 clickY=controlPoints(2,1);
             end
+            %increse the control point index
+            controlPointIndex=controlPointIndex+1;
             %add the point to the control point array
             %TODO use end+1 for increasing size
             controlPoints(1,end+1)=clickX;
@@ -56,8 +58,6 @@ function drawNewCurve()
             plot(controlPoints(1,end),controlPoints(2,end),'bo',...
                 'MarkerSize',10,'MarkerFaceColor','b',...
                 'ButtonDownFcn',{@controlPointClicked,controlPointIndex});
-            %increse the control point index
-            controlPointIndex=controlPointIndex+1;
         end
     end
     %draw the bezier curve on the current axis with the given control
@@ -126,7 +126,7 @@ function controlPointMoved(figureHandler,~,object,controlPointIndex)
     controlPoints(1,controlPointIndex)=newPos(1);
     controlPoints(2,controlPointIndex)=newPos(2);
     %re-draw bezier curve
-    drawBezierCurve(length(controlPoints));
+    drawBezierCurve();
 end
 
 %called after clicked on a control point and relased the mouse button.
