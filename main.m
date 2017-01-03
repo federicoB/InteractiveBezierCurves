@@ -1,5 +1,3 @@
-import BezierCurve;
-
 %remove items from workspace
 clear;
 %create a figure with defined title and hide showing figure number in title
@@ -22,7 +20,7 @@ currentAxis.Units = 'pixels';
 currentAxis.Position = [150 110 400 400];
 %define clear button but set to invisible for now
 uicontrol('Style', 'pushbutton', 'String', 'Clear','Position', [20 30 60 30],...
-            'Tag','ClearButton','Callback', @(src,event)drawNewCurve,...
+            'Tag','ClearButton','Callback', @(src,event)clearCurve,...
             'Visible','off');
 uicontrol('Style', 'pushbutton', 'String', 'Add curve','Position', [20 60 90 30],...
             'Tag','addCurveButton',...
@@ -35,10 +33,15 @@ hold on;
 %call function to draw a new bezier curve
 drawNewCurve();
 
-%clear the graph and ask the user a set of points for a new bezier curve
-function drawNewCurve()
+function clearCurve()
     %clear current plots
     cla;
+    clear;
+    drawNewCurve();
+end
+
+%clear the graph and ask the user a set of points for a new bezier curve
+function drawNewCurve()
     %set istructions for the user
     text = findobj('Tag','instructions');
     text.String = {'Left mouse click for define a control point',...
@@ -51,8 +54,9 @@ function drawNewCurve()
     %initialize control points vector
     %it's global for avoiding matlab way of passing parameter value in the
     %moment of callback definition not on callback call following an event
-    global bezierCurve;
-    bezierCurve = BezierCurve;
+    global bezierCurves;
+    bezierCurves = BezierCurve.empty;
+    bezierCurves(end+1) = BezierCurve;
     %initialize control point index
     controlPointIndex=0;
     %matlab doesn't support do-while loop so first we set a true contition
@@ -67,30 +71,30 @@ function drawNewCurve()
             if buttonClicked==2
                 %set the control point equal to the first control point for closing
                 %the curve
-                clickX=bezierCurve.controlPoints(1,1);
-                clickY=bezierCurve.controlPoints(2,1);
+                clickX=bezierCurves(end).controlPoints(1,1);
+                clickY=bezierCurves(end).controlPoints(2,1);
                 %set closed curve flag to 1
-                bezierCurve.closedCurve=1;
+                bezierCurves.closedCurve=1;
             end
             %increse the control point index
             controlPointIndex=controlPointIndex+1;
             %add the point to the control point array
-            bezierCurve.controlPoints(1,end+1)=clickX;
+            bezierCurves(end).controlPoints(1,end+1)=clickX;
             %the size is been already increased with latest command so only
             %use end here
-            bezierCurve.controlPoints(2,end)=clickY;
+            bezierCurves(end).controlPoints(2,end)=clickY;
             %if the curve is not closed (in a closed curve the latest
             %control point will not be plotted)
-            if (bezierCurve.closedCurve==0) 
+            if (bezierCurves(end).closedCurve==0) 
             %plot a blue cicle at the given coordinates
-            plot(bezierCurve.controlPoints(1,end),bezierCurve.controlPoints(2,end),'bo',...
+            plot(bezierCurves(end).controlPoints(1,end),bezierCurves(end).controlPoints(2,end),'bo',...
                 'MarkerSize',10,'MarkerFaceColor','b',...
-                'ButtonDownFcn',{@controlPointClicked,controlPointIndex});
+                'ButtonDownFcn',{@controlPointClicked,controlPointIndex,length(bezierCurves)});
             end 
         end
     end
     %draw the bezier curve
-    drawBezierCurve();
+    drawBezierCurve(bezierCurves(end));
     %after a curve is drawn, set to visible the clear button
     clearButton.Visible='on';
     %and the add curve button
@@ -100,10 +104,7 @@ function drawNewCurve()
 end
 
 %plot bezier curve with control polygonal given a set of points
-function drawBezierCurve()
-    %redeclare controlPoints array, being global if it was already defined
-    %it will be already set
-    global bezierCurve;
+function drawBezierCurve(bezierCurve)
     global controlPolyPlot bezierPlot;
     %delete old plots
     delete(controlPolyPlot);
@@ -125,17 +126,17 @@ function drawBezierCurve()
 end
 
 %called upon click on control point, activates drag and drop
-function controlPointClicked(src,~,controlPointIndex)
+function controlPointClicked(src,~,controlPointIndex,curveIndex)
     %get current figure handler
     fig = gcf;
     %set a listener for mouse move event
-    fig.WindowButtonMotionFcn = {@controlPointMoved,src,controlPointIndex};
+    fig.WindowButtonMotionFcn = {@controlPointMoved,src,controlPointIndex,curveIndex};
     %set a listener for mouse button relase event
     fig.WindowButtonUpFcn = @dropObject;
 end
 
 %called on drag of control point
-function controlPointMoved(figureHandler,~,object,controlPointIndex)
+function controlPointMoved(figureHandler,~,object,controlPointIndex,curveIndex)
     %get the current position of the mouse
     newPos = get(figureHandler,'CurrentPoint');
     %get current axes handler
@@ -154,15 +155,15 @@ function controlPointMoved(figureHandler,~,object,controlPointIndex)
     %move the graphical point on the axes
     movePlotPoint(newPos,object);
     %change the point in the control point array
-    moveCurveGeneratorsPoints(newPos,controlPointIndex);
+    moveCurveGeneratorsPoints(newPos,controlPointIndex,curveIndex);
     %redeclare closeCurve for get its global value
-    global bezierCurve;
+    global bezierCurves;
     %if we are moving the first control point and is a closed curve
-    if ((controlPointIndex==1)&&(bezierCurve.closedCurve==1))
+    if ((controlPointIndex==1)&&(bezierCurves(curveIndex).closedCurve==1))
         %get the index of the last control point
-        lastIndex = length(bezierCurve.controlPoints);
+        lastIndex = length(bezierCurves(curveIndex).controlPoints);
         %move also the last control point
-        moveCurveGeneratorsPoints(newPos,lastIndex); 
+        moveCurveGeneratorsPoints(newPos,lastIndex,curveIndex); 
     end
 end
 
@@ -172,14 +173,14 @@ function movePlotPoint(newPos,object)
     object.YData=newPos(2);
 end
 
-function moveCurveGeneratorsPoints(newPos,controlPointIndex)
+function moveCurveGeneratorsPoints(newPos,controlPointIndex,curveIndex)
     %redeclare controlPoints for getting its global value
-    global bezierCurve;
+    global bezierCurves;
     %update control point array
-    bezierCurve.controlPoints(1,controlPointIndex)=newPos(1);
-    bezierCurve.controlPoints(2,controlPointIndex)=newPos(2);
+    bezierCurves(curveIndex).controlPoints(1,controlPointIndex)=newPos(1);
+    bezierCurves(curveIndex).controlPoints(2,controlPointIndex)=newPos(2);
     %re-draw bezier curve
-    drawBezierCurve();
+    drawBezierCurve(bezierCurves(curveIndex));
 end
 
 %called after clicked on a control point and relased the mouse button.
