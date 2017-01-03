@@ -1,5 +1,7 @@
+import BezierCurve;
+
 %remove items from workspace
-clear
+clear;
 %create a figure with defined title and hide showing figure number in title
 figureHandler=figure('Name','Interactive Bezier Curves','NumberTitle','off');
 %hide the menu
@@ -29,7 +31,7 @@ uicontrol('Style', 'pushbutton', 'String', 'Add curve','Position', [20 60 90 30]
 uicontrol('Style','text','Position',[150 0 400 80],'HorizontalAlignment','left',...
     'Tag','instructions');
 %set hold state to on so adding new points doesn't delete old points
-hold on
+hold on;
 %call function to draw a new bezier curve
 drawNewCurve();
 
@@ -49,13 +51,8 @@ function drawNewCurve()
     %initialize control points vector
     %it's global for avoiding matlab way of passing parameter value in the
     %moment of callback definition not on callback call following an event
-    global controlPoints;
-    %global for the same above reason
-    global closedCurve;
-    %default curve is not closed
-    closedCurve=0;
-    %initialize control points to empty vector
-    controlPoints = [];
+    global bezierCurve;
+    bezierCurve = BezierCurve;
     %initialize control point index
     controlPointIndex=0;
     %matlab doesn't support do-while loop so first we set a true contition
@@ -70,23 +67,23 @@ function drawNewCurve()
             if buttonClicked==2
                 %set the control point equal to the first control point for closing
                 %the curve
-                clickX=controlPoints(1,1);
-                clickY=controlPoints(2,1);
+                clickX=bezierCurve.controlPoints(1,1);
+                clickY=bezierCurve.controlPoints(2,1);
                 %set closed curve flag to 1
-                closedCurve=1;
+                bezierCurve.closedCurve=1;
             end
             %increse the control point index
             controlPointIndex=controlPointIndex+1;
             %add the point to the control point array
-            controlPoints(1,end+1)=clickX;
+            bezierCurve.controlPoints(1,end+1)=clickX;
             %the size is been already increased with latest command so only
             %use end here
-            controlPoints(2,end)=clickY;
+            bezierCurve.controlPoints(2,end)=clickY;
             %if the curve is not closed (in a closed curve the latest
             %control point will not be plotted)
-            if (closedCurve==0) 
+            if (bezierCurve.closedCurve==0) 
             %plot a blue cicle at the given coordinates
-            plot(controlPoints(1,end),controlPoints(2,end),'bo',...
+            plot(bezierCurve.controlPoints(1,end),bezierCurve.controlPoints(2,end),'bo',...
                 'MarkerSize',10,'MarkerFaceColor','b',...
                 'ButtonDownFcn',{@controlPointClicked,controlPointIndex});
             end 
@@ -106,21 +103,21 @@ end
 function drawBezierCurve()
     %redeclare controlPoints array, being global if it was already defined
     %it will be already set
-    global controlPoints;
+    global bezierCurve;
     global controlPolyPlot bezierPlot;
     %delete old plots
     delete(controlPolyPlot);
     delete(bezierPlot);
-    if (~isempty(controlPoints))
+    if (~isempty(bezierCurve.controlPoints))
         % draw control polygonal
-        controlPolyPlot = plot(controlPoints(1,:),controlPoints(2,:),'g-');
+        controlPolyPlot = plot(bezierCurve.controlPoints(1,:),bezierCurve.controlPoints(2,:),'g-');
         %move the control polygonal to minimum z-index for better
         %click detection on control points
         uistack(controlPolyPlot,'bottom');
         %calculate bezier curve
-        bezierCurve = calculateBezier(controlPoints);
+        bezierPoints = bezierCurve.calculateBezier();
         %draw red solid line bézier curve
-        bezierPlot = plot(bezierCurve(1,:),bezierCurve(2,:),'r-');
+        bezierPlot = plot(bezierPoints(1,:),bezierPoints(2,:),'r-');
         %move the bezier curve plot to minimum z-index for better
         %click detection on control points
         uistack(bezierPlot,'bottom');
@@ -159,12 +156,11 @@ function controlPointMoved(figureHandler,~,object,controlPointIndex)
     %change the point in the control point array
     moveCurveGeneratorsPoints(newPos,controlPointIndex);
     %redeclare closeCurve for get its global value
-    global closedCurve;
+    global bezierCurve;
     %if we are moving the first control point and is a closed curve
-    if ((controlPointIndex==1)&&(closedCurve==1))
-        global controlPoints;
+    if ((controlPointIndex==1)&&(bezierCurve.closedCurve==1))
         %get the index of the last control point
-        lastIndex = length(controlPoints);
+        lastIndex = length(bezierCurve.controlPoints);
         %move also the last control point
         moveCurveGeneratorsPoints(newPos,lastIndex); 
     end
@@ -178,10 +174,10 @@ end
 
 function moveCurveGeneratorsPoints(newPos,controlPointIndex)
     %redeclare controlPoints for getting its global value
-    global controlPoints;
+    global bezierCurve;
     %update control point array
-    controlPoints(1,controlPointIndex)=newPos(1);
-    controlPoints(2,controlPointIndex)=newPos(2);
+    bezierCurve.controlPoints(1,controlPointIndex)=newPos(1);
+    bezierCurve.controlPoints(2,controlPointIndex)=newPos(2);
     %re-draw bezier curve
     drawBezierCurve();
 end
