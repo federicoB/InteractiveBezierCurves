@@ -23,11 +23,13 @@ uicontrol('Style', 'pushbutton', 'String', 'Clear','Position', [20 30 60 30],...
             'Tag','ClearButton','Callback', @(src,event)clearCurve,...
             'Visible','off');
 uicontrol('Style', 'pushbutton', 'String', 'Add curve','Position', [20 60 90 30],...
-            'Tag','addCurveButton',...
+            'Tag','addCurveButton','Callback', @(src,event)drawNewCurve,...
             'Visible','off');
 %define text for giving istruction to the user
 uicontrol('Style','text','Position',[150 0 400 80],'HorizontalAlignment','left',...
     'Tag','instructions');
+global bezierCurves;
+bezierCurves = BezierCurve.empty;
 %set hold state to on so adding new points doesn't delete old points
 hold on;
 %call function to draw a new bezier curve
@@ -55,7 +57,6 @@ function drawNewCurve()
     %it's global for avoiding matlab way of passing parameter value in the
     %moment of callback definition not on callback call following an event
     global bezierCurves;
-    bezierCurves = BezierCurve.empty;
     bezierCurves(end+1) = BezierCurve;
     %initialize control point index
     controlPointIndex=0;
@@ -74,7 +75,7 @@ function drawNewCurve()
                 clickX=bezierCurves(end).controlPoints(1,1);
                 clickY=bezierCurves(end).controlPoints(2,1);
                 %set closed curve flag to 1
-                bezierCurves.closedCurve=1;
+                bezierCurves(end).closedCurve=1;
             end
             %increse the control point index
             controlPointIndex=controlPointIndex+1;
@@ -94,7 +95,7 @@ function drawNewCurve()
         end
     end
     %draw the bezier curve
-    drawBezierCurve(bezierCurves(end));
+    drawBezierCurve(bezierCurves(end),length(bezierCurves));
     %after a curve is drawn, set to visible the clear button
     clearButton.Visible='on';
     %and the add curve button
@@ -104,24 +105,26 @@ function drawNewCurve()
 end
 
 %plot bezier curve with control polygonal given a set of points
-function drawBezierCurve(bezierCurve)
+function drawBezierCurve(bezierCurve,curveIndex)
     global controlPolyPlot bezierPlot;
     %delete old plots
-    delete(controlPolyPlot);
-    delete(bezierPlot);
+    if (length(controlPolyPlot)>=curveIndex)
+        delete(controlPolyPlot(curveIndex));
+        delete(bezierPlot(curveIndex));
+    end
     if (~isempty(bezierCurve.controlPoints))
         % draw control polygonal
-        controlPolyPlot = plot(bezierCurve.controlPoints(1,:),bezierCurve.controlPoints(2,:),'g-');
+        controlPolyPlot(curveIndex) = plot(bezierCurve.controlPoints(1,:),bezierCurve.controlPoints(2,:),'g-');
         %move the control polygonal to minimum z-index for better
         %click detection on control points
-        uistack(controlPolyPlot,'bottom');
+        uistack(controlPolyPlot(curveIndex),'bottom');
         %calculate bezier curve
         bezierPoints = bezierCurve.calculateBezier();
         %draw red solid line bézier curve
-        bezierPlot = plot(bezierPoints(1,:),bezierPoints(2,:),'r-');
+        bezierPlot(curveIndex) = plot(bezierPoints(1,:),bezierPoints(2,:),'r-');
         %move the bezier curve plot to minimum z-index for better
         %click detection on control points
-        uistack(bezierPlot,'bottom');
+        uistack(bezierPlot(curveIndex),'bottom');
     end
 end
 
@@ -180,7 +183,7 @@ function moveCurveGeneratorsPoints(newPos,controlPointIndex,curveIndex)
     bezierCurves(curveIndex).controlPoints(1,controlPointIndex)=newPos(1);
     bezierCurves(curveIndex).controlPoints(2,controlPointIndex)=newPos(2);
     %re-draw bezier curve
-    drawBezierCurve(bezierCurves(curveIndex));
+    drawBezierCurve(bezierCurves(curveIndex),curveIndex);
 end
 
 %called after clicked on a control point and relased the mouse button.
