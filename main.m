@@ -29,6 +29,9 @@ function drawNewCurve()
     %it's global for avoiding matlab way of passing parameter value on
     %callback definition not  on callback call following an event
     global controlPoints;
+    %global for the same above reason
+    global closedCurve;
+    closedCurve=0;
     %initialize control points to empty vector
     controlPoints = [];
     %initialize control point index
@@ -47,6 +50,7 @@ function drawNewCurve()
                 %the curve
                 clickX=controlPoints(1,1);
                 clickY=controlPoints(2,1);
+                closedCurve=1;
             end
             %increse the control point index
             controlPointIndex=controlPointIndex+1;
@@ -54,10 +58,12 @@ function drawNewCurve()
             %TODO use end+1 for increasing size
             controlPoints(1,end+1)=clickX;
             controlPoints(2,end)=clickY;
+            if (closedCurve==0) 
             %plot a blue cicle at the given coordinates
             plot(controlPoints(1,end),controlPoints(2,end),'bo',...
                 'MarkerSize',10,'MarkerFaceColor','b',...
                 'ButtonDownFcn',{@controlPointClicked,controlPointIndex});
+            end 
         end
     end
     %draw the bezier curve on the current axis with the given control
@@ -102,6 +108,8 @@ end
 
 %called on drag of control point
 function controlPointMoved(figureHandler,~,object,controlPointIndex)
+    %get the current position of the mouse
+    newPos = get(figureHandler,'CurrentPoint');
     %get current axes handler
     ax=gca;
     %get the pixel position and dimension of the axes
@@ -109,17 +117,29 @@ function controlPointMoved(figureHandler,~,object,controlPointIndex)
     %axesPosition is an array of 4 element x,y,width and height
     width = axesPosition(3);
     height = axesPosition(4);
-    %get the current position of the mouse
-    newPos = get(figureHandler,'CurrentPoint');
     %calculate pixel offset related to axes position
     newPos(1) = newPos(1) - axesPosition(1);
     newPos(2) = newPos(2) - axesPosition(2);
     %map pixel position to cartesian position
     newPos(1) = newPos(1)/width;
     newPos(2) = newPos(2)/height;
+    movePlotPoint(newPos,object);
+    moveCurveGeneratorsPoints(newPos,controlPointIndex);
+    global closedCurve;
+    if ((controlPointIndex==1)&&(closedCurve==1))
+        global controlPoints;
+        lastIndex = length(controlPoints);
+        moveCurveGeneratorsPoints(newPos,lastIndex); 
+    end
+end
+
+function movePlotPoint(newPos,object)
     %update control point "plot"
-    set(object,'XData',newPos(1));
-    set(object,'YData',newPos(2));
+    object.XData=newPos(1);
+    object.YData=newPos(2);
+end
+
+function moveCurveGeneratorsPoints(newPos,controlPointIndex)
     %redeclare controlPoints for getting its global value
     global controlPoints;
     %update control point array
