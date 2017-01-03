@@ -19,11 +19,14 @@ currentAxis = gca;
 currentAxis.Units = 'pixels';
 currentAxis.Position = [150 110 400 400];
 %define clear button but set to invisible for now
-btn = uicontrol('Style', 'pushbutton', 'String', 'Clear','Position', [20 30 60 30],...
+uicontrol('Style', 'pushbutton', 'String', 'Clear','Position', [20 30 60 30],...
             'Tag','ClearButton','Callback', @(src,event)drawNewCurve,...
             'Visible','off');
+uicontrol('Style', 'pushbutton', 'String', 'Add curve','Position', [20 60 90 30],...
+            'Tag','addCurveButton',...
+            'Visible','off');
 %define text for giving istruction to the user
-text = uicontrol('Style','text','Position',[150 0 400 80],'HorizontalAlignment','left',...
+uicontrol('Style','text','Position',[150 0 400 80],'HorizontalAlignment','left',...
     'Tag','instructions');
 %set hold state to on so adding new points doesn't delete old points
 hold on
@@ -38,9 +41,11 @@ function drawNewCurve()
     text = findobj('Tag','instructions');
     text.String = {'Left mouse click for define a control point',...
     'Central mouse button for ending draw a closed curve or right mouse button for open curve'};
-    %set clear button to invisible during drawing
-    btn = findobj('Tag','ClearButton');
-    btn.Visible = 'off';
+    %set clear button and add button to invisible during drawing
+    clearButton = findobj('Tag','ClearButton');
+    addCurveButton = findobj('Tag','addCurveButton');
+    clearButton.Visible = 'off';
+    addCurveButton.Visible = 'off';
     %initialize control points vector
     %it's global for avoiding matlab way of passing parameter value in the
     %moment of callback definition not on callback call following an event
@@ -90,7 +95,9 @@ function drawNewCurve()
     %draw the bezier curve
     drawBezierCurve();
     %after a curve is drawn, set to visible the clear button
-    btn.Visible='on';
+    clearButton.Visible='on';
+    %and the add curve button
+    addCurveButton.Visible='on';
     %modify instructions
     text.String = 'Drag and drop a control point for modify the curve';
 end
