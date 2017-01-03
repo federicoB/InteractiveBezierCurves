@@ -1,5 +1,7 @@
-%remove items from workspace
-clear;
+%clear global variables
+clearvars -global;
+%clear non-global variables
+clearvars;
 %create a figure with defined title and hide showing figure number in title
 figureHandler=figure('Name','Interactive Bezier Curves','NumberTitle','off');
 %hide the menu
@@ -17,11 +19,13 @@ currentAxis = gca;
 %set the unit of measurement to pixel
 %ginput() and plot() still use dimension based on cartesian coordinate
 currentAxis.Units = 'pixels';
+%set axis left-margin, bottom-margin, width and height
 currentAxis.Position = [150 110 400 400];
 %define clear button but set to invisible for now
 uicontrol('Style', 'pushbutton', 'String', 'Clear','Position', [20 30 60 30],...
             'Tag','ClearButton','Callback', @(src,event)clearCurve,...
             'Visible','off');
+%define button for adding a curve, but hide it for now        
 uicontrol('Style', 'pushbutton', 'String', 'Add curve','Position', [20 60 90 30],...
             'Tag','addCurveButton','Callback', @(src,event)drawNewCurve,...
             'Visible','off');
@@ -29,6 +33,7 @@ uicontrol('Style', 'pushbutton', 'String', 'Add curve','Position', [20 60 90 30]
 uicontrol('Style','text','Position',[150 0 400 80],'HorizontalAlignment','left',...
     'Tag','instructions');
 global bezierCurves;
+%initialize bezierCurves to empty BezierCurve array
 bezierCurves = BezierCurve.empty;
 %set hold state to on so adding new points doesn't delete old points
 hold on;
@@ -38,7 +43,10 @@ drawNewCurve();
 function clearCurve()
     %clear current plots
     cla;
-    clear;
+    %clear global variables
+    clearvars -global;
+    %clear non-global variables
+    clearvars;
     drawNewCurve();
 end
 
@@ -53,10 +61,11 @@ function drawNewCurve()
     addCurveButton = findobj('Tag','addCurveButton');
     clearButton.Visible = 'off';
     addCurveButton.Visible = 'off';
-    %initialize control points vector
+    %initialize list of bezier curves
     %it's global for avoiding matlab way of passing parameter value in the
     %moment of callback definition not on callback call following an event
     global bezierCurves;
+    %add a curve to the list of curves
     bezierCurves(end+1) = BezierCurve;
     %initialize control point index
     controlPointIndex=0;
@@ -107,7 +116,7 @@ end
 %plot bezier curve with control polygonal given a set of points
 function drawBezierCurve(bezierCurve,curveIndex)
     global controlPolyPlot bezierPlot;
-    %delete old plots
+    %delete old plots if present
     if (length(controlPolyPlot)>=curveIndex)
         delete(controlPolyPlot(curveIndex));
         delete(bezierPlot(curveIndex));
@@ -159,7 +168,7 @@ function controlPointMoved(figureHandler,~,object,controlPointIndex,curveIndex)
     movePlotPoint(newPos,object);
     %change the point in the control point array
     moveCurveGeneratorsPoints(newPos,controlPointIndex,curveIndex);
-    %redeclare closeCurve for get its global value
+    %redeclare bezierCurves for get its global value
     global bezierCurves;
     %if we are moving the first control point and is a closed curve
     if ((controlPointIndex==1)&&(bezierCurves(curveIndex).closedCurve==1))
@@ -177,7 +186,7 @@ function movePlotPoint(newPos,object)
 end
 
 function moveCurveGeneratorsPoints(newPos,controlPointIndex,curveIndex)
-    %redeclare controlPoints for getting its global value
+    %redeclare bezierCurves for getting its global value
     global bezierCurves;
     %update control point array
     bezierCurves(curveIndex).controlPoints(1,controlPointIndex)=newPos(1);
