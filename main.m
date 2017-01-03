@@ -26,11 +26,12 @@ function drawNewCurve()
     %clear current plots
     cla;
     %initialize control points vector
-    %it's global for avoiding matlab way of passing parameter value on
-    %callback definition not  on callback call following an event
+    %it's global for avoiding matlab way of passing parameter value in the
+    %moment of callback definition not on callback call following an event
     global controlPoints;
     %global for the same above reason
     global closedCurve;
+    %default curve is not closed
     closedCurve=0;
     %initialize control points to empty vector
     controlPoints = [];
@@ -50,14 +51,18 @@ function drawNewCurve()
                 %the curve
                 clickX=controlPoints(1,1);
                 clickY=controlPoints(2,1);
+                %set closed curve flag to 1
                 closedCurve=1;
             end
             %increse the control point index
             controlPointIndex=controlPointIndex+1;
             %add the point to the control point array
-            %TODO use end+1 for increasing size
             controlPoints(1,end+1)=clickX;
+            %the size is been already increased with latest command so only
+            %use end here
             controlPoints(2,end)=clickY;
+            %if the curve is not closed (in a closed curve the latest
+            %control point will not be plotted)
             if (closedCurve==0) 
             %plot a blue cicle at the given coordinates
             plot(controlPoints(1,end),controlPoints(2,end),'bo',...
@@ -66,8 +71,7 @@ function drawNewCurve()
             end 
         end
     end
-    %draw the bezier curve on the current axis with the given control
-    %points
+    %draw the bezier curve
     drawBezierCurve();
 end
 
@@ -123,12 +127,18 @@ function controlPointMoved(figureHandler,~,object,controlPointIndex)
     %map pixel position to cartesian position
     newPos(1) = newPos(1)/width;
     newPos(2) = newPos(2)/height;
+    %move the graphical point on the axes
     movePlotPoint(newPos,object);
+    %change the point in the control point array
     moveCurveGeneratorsPoints(newPos,controlPointIndex);
+    %redeclare closeCurve for get its global value
     global closedCurve;
+    %if we are moving the first control point and is a closed curve
     if ((controlPointIndex==1)&&(closedCurve==1))
         global controlPoints;
+        %get the index of the last control point
         lastIndex = length(controlPoints);
+        %move also the last control point
         moveCurveGeneratorsPoints(newPos,lastIndex); 
     end
 end
