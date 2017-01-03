@@ -4,6 +4,10 @@ clear
 figureHandler=figure('Name','Interactive Bezier Curves','NumberTitle','off');
 %hide the menu
 figureHandler.MenuBar='none';
+%get screen dimension
+screenSize = get(groot,'ScreenSize');
+%set figure position and dimension according to screen dimension
+figureHandler.Position=[1 screenSize(4)/2 screenSize(3)/2 screenSize(4)/2];
 %use the same length for the data units along each axis
 axis equal;
 %set axis limits
@@ -13,18 +17,30 @@ currentAxis = gca;
 %set the unit of measurement to pixel
 %ginput() and plot() still use dimension based on cartesian coordinate
 currentAxis.Units = 'pixels';
+currentAxis.Position = [150 110 400 400];
+%define clear button but set to invisible for now
+btn = uicontrol('Style', 'pushbutton', 'String', 'Clear','Position', [20 30 60 30],...
+            'Tag','ClearButton','Callback', @(src,event)drawNewCurve,...
+            'Visible','off');
+%define text for giving istruction to the user
+text = uicontrol('Style','text','Position',[150 0 400 80],'HorizontalAlignment','left',...
+    'Tag','instructions');
 %set hold state to on so adding new points doesn't delete old points
 hold on
 %call function to draw a new bezier curve
 drawNewCurve();
-%when a curve is already draw, add the button to clear it and draw a new
-%curve
-btn = uicontrol('Style', 'pushbutton', 'String', 'Clear','Position', [20 20 60 30],'Callback', @(src,event)drawNewCurve);
 
 %clear the graph and ask the user a set of points for a new bezier curve
 function drawNewCurve()
     %clear current plots
     cla;
+    %set istructions for the user
+    text = findobj('Tag','instructions');
+    text.String = {'Left mouse click for define a control point',...
+    'Central mouse button for ending draw a closed curve or right mouse button for open curve'};
+    %set clear button to invisible during drawing
+    btn = findobj('Tag','ClearButton');
+    btn.Visible = 'off';
     %initialize control points vector
     %it's global for avoiding matlab way of passing parameter value in the
     %moment of callback definition not on callback call following an event
@@ -73,6 +89,10 @@ function drawNewCurve()
     end
     %draw the bezier curve
     drawBezierCurve();
+    %after a curve is drawn, set to visible the clear button
+    btn.Visible='on';
+    %modify instructions
+    text.String = 'Drag and drop a control point for modify the curve';
 end
 
 %plot bezier curve with control polygonal given a set of points
