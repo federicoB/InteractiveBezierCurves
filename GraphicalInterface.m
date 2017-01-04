@@ -4,22 +4,23 @@ classdef GraphicalInterface < handle
     
     properties
         application;
-        controlPointsPlot;
-        controlPolyPlot; 
+        controlPointsPlot=[];
+        controlPolyPlot=[];
         bezierPlot;
         clearButton;
         addCurveButton;
         tangentButton;
         normalButton;
         textInstructions;
+        hideControlsButton;
     end
     
     methods
-        function this = GraphicalInterface(applicationReference) 
+        function this = GraphicalInterface(applicationReference)
             this.application=applicationReference;
         end
         
-        function create(this) 
+        function create(this)
             %create a figure with defined title and hide showing figure number in title
             figureHandler=figure('Name','Interactive Bezier Curves','NumberTitle','off');
             %hide the menu
@@ -45,7 +46,7 @@ classdef GraphicalInterface < handle
                 'Visible','off');
             %define button for adding a curve, but hide it for now
             this.addCurveButton = uicontrol('Style', 'pushbutton', 'String', 'Add curve','Position', [20 60 90 30],...
-                'Callback', @(src,event)this.application.userInteractionAgent.drawNewCurve(),...
+                'Callback', @(src,event)this.application.userInteractionAgent.drawNewCurve,...
                 'Visible','off');
             %define button for showing tangent, but hide it for now
             this.tangentButton = uicontrol('Style', 'pushbutton', 'String', 'Tangent','Position', [20 90 90 30],...
@@ -53,17 +54,22 @@ classdef GraphicalInterface < handle
             %define button for showing normal, but hide it for now
             this.normalButton = uicontrol('Style', 'pushbutton', 'String', 'Normal','Position', [20 120 90 30],...
                 'Visible','off');
+            this.hideControlsButton = uicontrol('Style', 'pushbutton', 'String', 'HideControls','Position', [20 120 90 30],...
+                'Visible','off','Callback',@(src,event)this.hideControls);
             %define text for giving istruction to the user
             this.textInstructions = uicontrol('Style','text','Position',[150 0 400 80],'HorizontalAlignment','left');
         end
         
-        function enterDrawingMode(this) 
+        function enterDrawingMode(this)
             %set istructions for the user
             this.textInstructions.String = {'Left mouse click for define a control point',...
                 'Central mouse button for ending draw a closed curve or right mouse button for open curve'};
             %set clear button and add button to invisible during drawing
             this.clearButton.Visible = 'off';
             this.addCurveButton.Visible = 'off';
+            this.tangentButton.Visible = 'off';
+            this.normalButton.Visible = 'off';
+            this.hideControlsButton.Visible = 'off';
         end
         
         function plotControlPoint(this,x,y,clickcallback,controlPointNumber,curveNumber)
@@ -78,6 +84,9 @@ classdef GraphicalInterface < handle
             this.clearButton.Visible='on';
             %and the add curve button
             this.addCurveButton.Visible='on';
+            this.tangentButton.Visible = 'on';
+            this.normalButton.Visible = 'on';
+            this.hideControlsButton.Visible = 'on';
             %modify instructions
             this.textInstructions.String = 'Drag and drop a control point for modify the curve';
         end
@@ -107,18 +116,50 @@ classdef GraphicalInterface < handle
             end
         end
         
-       function clearAllCurves(this);
+        function clearAllCurves(this);
             this.application.clearCurves();
             cellfun(@(tag) this.deleteControlPoint(tag),this.controlPointsPlot);
-            delete(this.controlPolyPlot); 
+            delete(this.controlPolyPlot);
             delete(this.bezierPlot);
             this.application.userInteractionAgent.drawNewCurve();
-       end
+        end
         
-       function deleteControlPoint(this,tag)
-          obj=findobj('Tag',tag);
-          delete(obj);
-       end
+        function deleteControlPoint(this,tag)
+            obj=findobj('Tag',tag);
+            delete(obj);
+        end
+        
+        function hideControls(this)
+            cellfun(@hideControlPoint,this.controlPointsPlot);
+            function hideControlPoint(tag)
+                if (ischar(tag)) 
+                    obj=findobj('Tag',tag);
+                    obj.Visible='off';
+                end
+            end
+            arrayfun(@hidePolygonals,this.controlPolyPlot);
+            function hidePolygonals(polygonal)
+                set(polygonal,'Visible','off');
+            end
+            this.hideControlsButton.String='Show';
+            this.hideControlsButton.Callback=@(src,event)this.showControls;
+        end
+        
+        function showControls(this)
+            cellfun(@showControls,this.controlPointsPlot);
+            function showControls(tag)
+                if (ischar(tag)) 
+                    obj=findobj('Tag',tag);
+                    obj.Visible='on';
+                end
+            end
+            arrayfun(@hidePolygonals,this.controlPolyPlot);
+            function hidePolygonals(polygonal)
+                set(polygonal,'Visible','on');
+            end
+            this.hideControlsButton.String='Hide';
+            this.hideControlsButton.Callback=@(src,event)this.hideControls;
+        end
         
         function movePlotPoint(~,newPos,object)
             %update control point "plot"
