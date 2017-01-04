@@ -19,6 +19,7 @@ classdef UserInteractionAgent < handle
             bezierCurves = this.application.bezierCurves;
             %add a curve to the list of curves
             bezierCurves(end+1) = BezierCurve;
+            currentCurveIndex = length(bezierCurves);
             %initialize control point indexthisthis
             controlPointIndex=0;
             %matlab doesn't support do-while loop so first we set a true contition
@@ -48,29 +49,31 @@ classdef UserInteractionAgent < handle
                     %if the curve is not closed (in a closed curve the latest
                     %control point will not be plotted)
                     if (bezierCurves(end).closedCurve==0)
-                        clickcallback = {@this.controlPointClicked,controlPointIndex,length(bezierCurves)};
-                        graphicalInterface.plotControlPoint(clickX,clickY,clickcallback);
+                        clickcallback = {@this.controlPointClicked,controlPointIndex,currentCurveIndex};
+                        graphicalInterface.plotControlPoint(clickX,clickY,clickcallback,controlPointIndex,currentCurveIndex);
                     end
                 end
             end
+            %update application bezier curves
+            this.application.bezierCurves = bezierCurves;
             %draw the bezier curve
-            graphicalInterface.drawBezierCurve(bezierCurves(end),length(bezierCurves));
+            graphicalInterface.drawBezierCurve(currentCurveIndex);
             graphicalInterface.exitDrawingMode();
         end
         
         
         %called upon click on control point, activates drag and drop
-        function controlPointClicked(src,~,controlPointIndex,curveIndex)
+        function controlPointClicked(this,src,~,controlPointIndex,curveIndex)
             %get current figure handler
             fig = gcf;
             %set a listener for mouse move event
-            fig.WindowButtonMotionFcn = {@controlPointMoved,src,controlPointIndex,curveIndex};
+            fig.WindowButtonMotionFcn = {@this.controlPointMoved,src,controlPointIndex,curveIndex};
             %set a listener for mouse button relase event
-            fig.WindowButtonUpFcn = @dropObject;
+            fig.WindowButtonUpFcn = @this.dropObject;
         end
         
         %called on drag of control point
-        function controlPointMoved(figureHandler,~,object,controlPointIndex,curveIndex)
+        function controlPointMoved(this,figureHandler,~,object,controlPointIndex,curveIndex)
             %get the current position of the mouse
             newPos = get(figureHandler,'CurrentPoint');
             %get current axes handler
@@ -86,34 +89,40 @@ classdef UserInteractionAgent < handle
             %map pixel position to cartesian position
             newPos(1) = newPos(1)/width;
             newPos(2) = newPos(2)/height;
+            %get graphical interface
+            graphicalInterface = this.application.graphicalInterface;
             %move the graphical point on the axes
-            movePlotPoint(newPos,object);
+            graphicalInterface.movePlotPoint(newPos,object);
             %change the point in the control point array
-            moveCurveGeneratorsPoints(newPos,controlPointIndex,curveIndex);
-            %redeclare bezierCurves for get its global value
-            global bezierCurves;
+            this.moveCurveGeneratorsPoints(newPos,controlPointIndex,curveIndex);
+            %get bezier curves
+            bezierCurves=this.application.bezierCurves;
             %if we are moving the first control point and is a closed curve
             if ((controlPointIndex==1)&&(bezierCurves(curveIndex).closedCurve==1))
                 %get the index of the last control point
                 lastIndex = length(bezierCurves(curveIndex).controlPoints);
                 %move also the last control point
-                moveCurveGeneratorsPoints(newPos,lastIndex,curveIndex);
+                this.moveCurveGeneratorsPoints(newPos,lastIndex,curveIndex);
             end
         end
        
         
-        function moveCurveGeneratorsPoints(newPos,controlPointIndex,curveIndex)
-            %redeclare bezierCurves for getting its global value
-            global bezierCurves;
+        function moveCurveGeneratorsPoints(this,newPos,controlPointIndex,curveIndex)
+            %get bezier curves
+            bezierCurves=this.application.bezierCurves;
             %update control point array
             bezierCurves(curveIndex).controlPoints(1,controlPointIndex)=newPos(1);
             bezierCurves(curveIndex).controlPoints(2,controlPointIndex)=newPos(2);
+            %get graphical interface
+            graphicalInterface = this.application.graphicalInterface;
+            %update application bezier curves
+            this.application.bezierCurves = bezierCurves;
             %re-draw bezier curve
-            drawBezierCurve(bezierCurves(curveIndex),curveIndex);
+            graphicalInterface.drawBezierCurve(curveIndex);
         end
         
         %called after clicked on a control point and relased the mouse button.
-        function dropObject(~,~)
+        function dropObject(this,~,~)
             %get current figure handler
             fig = gcf;
             %remove listener for mouse move event

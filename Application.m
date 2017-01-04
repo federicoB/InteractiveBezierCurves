@@ -22,6 +22,10 @@ classdef Application < handle
             %call function to draw a new bezier curve
             this.userInteractionAgent.drawNewCurve();
         end
+        
+        function clearCurves(this)
+            delete(this.bezierCurves);
+        end    
     end
     
 end

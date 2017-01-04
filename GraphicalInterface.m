@@ -41,11 +41,11 @@ classdef GraphicalInterface < handle
             currentAxis.Position = [150 110 400 400];
             %define clear button but set to invisible for now
             this.clearButton = uicontrol('Style', 'pushbutton', 'String', 'Clear','Position', [20 30 60 30],...
-                'Callback', @(src,event)clearCurve,...
+                'Callback', @(src,event)this.clearAllCurves,...
                 'Visible','off');
             %define button for adding a curve, but hide it for now
             this.addCurveButton = uicontrol('Style', 'pushbutton', 'String', 'Add curve','Position', [20 60 90 30],...
-                'Callback', @(src,event)drawNewCurve,...
+                'Callback', @(src,event)this.application.userInteractionAgent.drawNewCurve(),...
                 'Visible','off');
             %define button for showing tangent, but hide it for now
             this.tangentButton = uicontrol('Style', 'pushbutton', 'String', 'Tangent','Position', [20 90 90 30],...
@@ -66,9 +66,11 @@ classdef GraphicalInterface < handle
             this.addCurveButton.Visible = 'off';
         end
         
-        function plotControlPoint(this,x,y,clickcallback)
+        function plotControlPoint(this,x,y,clickcallback,controlPointNumber,curveNumber)
+            tag = strcat(int2str(controlPointNumber),'-',int2str(curveNumber));
             %plot a blue cicle at the given coordinates
-            plot(x,y,'bo','MarkerSize',10,'MarkerFaceColor','b','ButtonDownFcn',clickcallback);
+            plot(x,y,'bo','MarkerSize',10,'MarkerFaceColor','b','ButtonDownFcn',clickcallback,'Tag',tag);
+            this.controlPointsPlot{curveNumber,controlPointNumber}=tag;
         end
         
         function exitDrawingMode(this)
@@ -81,8 +83,9 @@ classdef GraphicalInterface < handle
         end
         
         %plot bezier curve with control polygonal given a set of points
-        function drawBezierCurve(this,bezierCurve,curveIndex)
-
+        function drawBezierCurve(this,curveIndex)
+            %get bezier curve by given index
+            bezierCurve = this.application.bezierCurves(curveIndex);
             %delete old plots if present
             if (length(this.controlPolyPlot)>=curveIndex)
                 delete(this.controlPolyPlot(curveIndex));
@@ -104,15 +107,20 @@ classdef GraphicalInterface < handle
             end
         end
         
-       function clearCurve(this)
-            %clear current plots
-            cla;
-            %clear variables
-            clearvars;
+       function clearAllCurves(this);
+            this.application.clearCurves();
+            cellfun(@(tag) this.deleteControlPoint(tag),this.controlPointsPlot);
+            delete(this.controlPolyPlot); 
+            delete(this.bezierPlot);
             this.application.userInteractionAgent.drawNewCurve();
-        end
+       end
         
-        function movePlotPoint(newPos,object)
+       function deleteControlPoint(this,tag)
+          obj=findobj('Tag',tag);
+          delete(obj);
+       end
+        
+        function movePlotPoint(~,newPos,object)
             %update control point "plot"
             object.XData=newPos(1);
             object.YData=newPos(2);
