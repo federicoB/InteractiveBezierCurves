@@ -9,22 +9,18 @@ classdef Application < handle
     
     methods
         function start(this)
-            %clear global variables
-            clearvars -global;
-            %clear non-global variables
-            clearvars;
-            
-            this.graphicalInterface = GraphicalInterface;
+            this.graphicalInterface = GraphicalInterface(this);
             this.graphicalInterface.create();
             
             %initialize bezierCurves to empty BezierCurve array
             this.bezierCurves = BezierCurve.empty;
+            
             %set hold state to on so adding new points doesn't delete old points
             hold on;
             
-            userInteractionAgent = UserInteractionAgent(this.bezierCurves);
+            this.userInteractionAgent = UserInteractionAgent(this);
             %call function to draw a new bezier curve
-            userInteractionAgent.drawNewCurve();
+            this.userInteractionAgent.drawNewCurve();
         end
     end
     

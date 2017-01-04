@@ -3,9 +3,22 @@ classdef GraphicalInterface < handle
     %   Detailed explanation goes here
     
     properties
+        application;
+        controlPointsPlot;
+        controlPolyPlot; 
+        bezierPlot;
+        clearButton;
+        addCurveButton;
+        tangentButton;
+        normalButton;
+        textInstructions;
     end
     
     methods
+        function this = GraphicalInterface(applicationReference) 
+            this.application=applicationReference;
+        end
+        
         function create(this) 
             %create a figure with defined title and hide showing figure number in title
             figureHandler=figure('Name','Interactive Bezier Curves','NumberTitle','off');
@@ -27,24 +40,82 @@ classdef GraphicalInterface < handle
             %set axis left-margin, bottom-margin, width and height
             currentAxis.Position = [150 110 400 400];
             %define clear button but set to invisible for now
-            uicontrol('Style', 'pushbutton', 'String', 'Clear','Position', [20 30 60 30],...
-                'Tag','ClearButton','Callback', @(src,event)clearCurve,...
+            this.clearButton = uicontrol('Style', 'pushbutton', 'String', 'Clear','Position', [20 30 60 30],...
+                'Callback', @(src,event)clearCurve,...
                 'Visible','off');
             %define button for adding a curve, but hide it for now
-            uicontrol('Style', 'pushbutton', 'String', 'Add curve','Position', [20 60 90 30],...
-                'Tag','addCurveButton','Callback', @(src,event)drawNewCurve,...
+            this.addCurveButton = uicontrol('Style', 'pushbutton', 'String', 'Add curve','Position', [20 60 90 30],...
+                'Callback', @(src,event)drawNewCurve,...
                 'Visible','off');
             %define button for showing tangent, but hide it for now
-            uicontrol('Style', 'pushbutton', 'String', 'Tangent','Position', [20 90 90 30],...
-                'Tag','tangent',...
+            this.tangentButton = uicontrol('Style', 'pushbutton', 'String', 'Tangent','Position', [20 90 90 30],...
                 'Visible','off');
             %define button for showing normal, but hide it for now
-            uicontrol('Style', 'pushbutton', 'String', 'Normal','Position', [20 120 90 30],...
-                'Tag','normal',...
+            this.normalButton = uicontrol('Style', 'pushbutton', 'String', 'Normal','Position', [20 120 90 30],...
                 'Visible','off');
             %define text for giving istruction to the user
-            uicontrol('Style','text','Position',[150 0 400 80],'HorizontalAlignment','left',...
-                'Tag','instructions');
+            this.textInstructions = uicontrol('Style','text','Position',[150 0 400 80],'HorizontalAlignment','left');
+        end
+        
+        function enterDrawingMode(this) 
+            %set istructions for the user
+            this.textInstructions.String = {'Left mouse click for define a control point',...
+                'Central mouse button for ending draw a closed curve or right mouse button for open curve'};
+            %set clear button and add button to invisible during drawing
+            this.clearButton.Visible = 'off';
+            this.addCurveButton.Visible = 'off';
+        end
+        
+        function plotControlPoint(this,x,y,clickcallback)
+            %plot a blue cicle at the given coordinates
+            plot(x,y,'bo','MarkerSize',10,'MarkerFaceColor','b','ButtonDownFcn',clickcallback);
+        end
+        
+        function exitDrawingMode(this)
+            %after a curve is drawn, set to visible the clear button
+            this.clearButton.Visible='on';
+            %and the add curve button
+            this.addCurveButton.Visible='on';
+            %modify instructions
+            this.textInstructions.String = 'Drag and drop a control point for modify the curve';
+        end
+        
+        %plot bezier curve with control polygonal given a set of points
+        function drawBezierCurve(this,bezierCurve,curveIndex)
+
+            %delete old plots if present
+            if (length(this.controlPolyPlot)>=curveIndex)
+                delete(this.controlPolyPlot(curveIndex));
+                delete(this.bezierPlot(curveIndex));
+            end
+            if (~isempty(bezierCurve.controlPoints))
+                % draw control polygonal
+                this.controlPolyPlot(curveIndex) = plot(bezierCurve.controlPoints(1,:),bezierCurve.controlPoints(2,:),'g-');
+                %move the control polygonal to minimum z-index for better
+                %click detection on control points
+                uistack(this.controlPolyPlot(curveIndex),'bottom');
+                %calculate bezier curve
+                bezierPoints = bezierCurve.calculateBezier();
+                %draw red solid line bézier curve
+                this.bezierPlot(curveIndex) = plot(bezierPoints(1,:),bezierPoints(2,:),'r-');
+                %move the bezier curve plot to minimum z-index for better
+                %click detection on control points
+                uistack(this.bezierPlot(curveIndex),'bottom');
+            end
+        end
+        
+       function clearCurve(this)
+            %clear current plots
+            cla;
+            %clear variables
+            clearvars;
+            this.application.userInteractionAgent.drawNewCurve();
+        end
+        
+        function movePlotPoint(newPos,object)
+            %update control point "plot"
+            object.XData=newPos(1);
+            object.YData=newPos(2);
         end
     end
     
