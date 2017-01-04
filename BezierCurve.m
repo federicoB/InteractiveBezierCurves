@@ -1,4 +1,4 @@
-classdef BezierCurve
+classdef BezierCurve < handle
     %BEZIERCURVE Class for handling bezier curves
     
     properties
