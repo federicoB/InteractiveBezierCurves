@@ -1,4 +1,4 @@
-function [y,yd] = decastWithDerivative( coefLength,points )
+function [y,yd] = decastWithDerivative( coef,points )
 %DECASTWITHDERIVATIVE evaluate the value of the polyonomial and derivative
 % evaluate the value of the polyonomial and derivative given the
 % polyonimal's coefficents and evaluation points.
@@ -17,6 +17,6 @@ for i=1:numberOfPoints
   end
  end
  y(i)=w(1);
- yd(k)=grade(w(2)-w(1))/d2;
+ yd(i)=grade*(w(2)-w(1))/d2;
 end
 
