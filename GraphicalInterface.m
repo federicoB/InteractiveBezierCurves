@@ -14,6 +14,7 @@ classdef GraphicalInterface < handle
         normalButton;
         textInstructions;
         hideControlsButton;
+        lengthButton;
     end
     
     methods
@@ -57,7 +58,11 @@ classdef GraphicalInterface < handle
             this.normalButton = uicontrol('Style', 'pushbutton', 'String', 'Normal','Position', [20 120 90 30],...
                 'Callback',@(src,event)this.application.userInteractionAgent.enterNormalMode,...
                 'Visible','off');
-            this.hideControlsButton = uicontrol('Style', 'pushbutton', 'String', 'HideControls','Position', [20 150 90 30],...
+            %define button for calculate length of the curve, but hide it for now
+            this.lengthButton = uicontrol('Style', 'pushbutton', 'String', 'Length','Position', [20 150 90 30],...
+                'Callback',@(src,event)this.application.userInteractionAgent.calculateLength,...
+                'Visible','off');
+            this.hideControlsButton = uicontrol('Style', 'pushbutton', 'String', 'HideControls','Position', [20 180 90 30],...
                 'Visible','off','Callback',@(src,event)this.hideControls);
             %define text for giving istruction to the user
             this.textInstructions = uicontrol('Style','text','Position',[150 0 400 80],'HorizontalAlignment','left');
@@ -73,6 +78,7 @@ classdef GraphicalInterface < handle
             this.tangentButton.Visible = 'off';
             this.normalButton.Visible = 'off';
             this.hideControlsButton.Visible = 'off';
+            this.lengthButton.Visible = 'off';
         end
         
         function plotControlPoint(this,x,y,clickcallback,controlPointNumber,curveNumber)
@@ -90,6 +96,7 @@ classdef GraphicalInterface < handle
             this.tangentButton.Visible = 'on';
             this.normalButton.Visible = 'on';
             this.hideControlsButton.Visible = 'on';
+            this.lengthButton.Visible = 'on';
             %modify instructions
             this.textInstructions.String = 'Drag and drop a control point for modify the curve';
         end
