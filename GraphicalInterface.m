@@ -119,12 +119,17 @@ classdef GraphicalInterface < handle
             end
         end
         
-        function clearAllPlot(this);
+        function clearAllPlot(this)
+            %clear everything except this
             this.application.clearCurves();
             cellfun(@(tag) this.deleteControlPoint(tag),this.controlPointsPlot);
+            this.controlPointsPlot=[];
             delete(this.controlPolyPlot);
+            this.controlPolyPlot = [];
             delete(this.bezierPlot);
+            this.bezierPlot = [];
             delete(this.tangentPlot);
+            this.tangentPlot=[];
             this.application.userInteractionAgent.drawNewCurve();
         end
         
@@ -172,7 +177,8 @@ classdef GraphicalInterface < handle
         end
         
         function plotTangent(this,line,curveIndex)
-           this.tangentPlot(curveIndex) = plot(line(1,:),line(2,:));
+           this.tangentPlot(curveIndex,end+1) = plot(line(1,:),line(2,:));
+           uistack(this.tangentPlot(curveIndex,end),'bottom');
         end
     end
     

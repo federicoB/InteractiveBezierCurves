@@ -24,7 +24,7 @@ classdef Application < handle
         end
         
         function clearCurves(this)
-            delete(this.bezierCurves);
+            this.bezierCurves=BezierCurve.empty;
         end    
     end
     

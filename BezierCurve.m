@@ -27,9 +27,9 @@ classdef BezierCurve < handle
         function [pointX,pointY,xderivative,yderivative] = getDerivativeValue(this,x,y)
             distance = [(this.xValues-x)',(this.yValues-y)'];
             for i=1:length(distance);
-                normal(i) = norm (distance(i));
+                normalized(i) = norm (distance(i));
             end
-            [~,index] = min(normal);
+            [~,index] = min(normalized);
             pointX = this.xValues(index);
             pointY = this.yValues(index);
             xderivative = this.xDerivative(index);
@@ -37,13 +37,21 @@ classdef BezierCurve < handle
         end
         
         function tangent = getTangent(this,x,y)
-           [x y derivative(1),derivative(2)] = this.getDerivativeValue(x,y);
+           [x,y,derivative(1),derivative(2)] = this.getDerivativeValue(x,y);
            linearSpace = linspace(-1,1,100);
-           t(1)=derivative(1)/norm(derivative);
-           t(2)=derivative(2)/norm(derivative);
-           %t = [xderivative,yderivative]/norm([xderivative,yderivative]);
-           tangent(1,:) = x+t(1)*(linearSpace);
-           tangent(2,:) = y+t(2)*(linearSpace);
+           derivative(1)=derivative(1)/norm(derivative);
+           derivative(2)=derivative(2)/norm(derivative);
+           tangent(1,:) = x+derivative(1)*(linearSpace);
+           tangent(2,:) = y+derivative(2)*(linearSpace);
+        end
+        
+        function normal = getNormal(this,x,y)
+           [x,y,derivative(1),derivative(2)] = this.getDerivativeValue(x,y);
+           linearSpace = linspace(-1,1,100);
+           derivative(1)=-derivative(2)/derivative(1);
+           derivative(2)=1;
+           normal(1,:) = x+derivative(1)*(linearSpace);
+           normal(2,:) = y+derivative(2)*(linearSpace);
         end
     end
     

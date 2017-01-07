@@ -164,8 +164,15 @@ classdef UserInteractionAgent < handle
             x = clickedPosition(1);
             y = clickedPosition(2);
             bezierCurve = this.application.bezierCurves(curveIndex);
-            tangent = bezierCurve.getTangent(x,y);
-            this.application.graphicalInterface.plotTangent(tangent,curveIndex);
+%             if (tangent==1) 
+%                 line = bezierCurve.getTangent(x,y);
+%             else
+%                line = bezierCurve.getNormal(x,y); 
+%             end
+            line = bezierCurve.getTangent(x,y);
+            this.application.graphicalInterface.plotTangent(line,curveIndex);
+            line = bezierCurve.getNormal(x,y); 
+            this.application.graphicalInterface.plotTangent(line,curveIndex);
         end
         
         
