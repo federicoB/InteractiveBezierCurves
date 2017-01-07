@@ -7,7 +7,7 @@ classdef GraphicalInterface < handle
         controlPointsPlot=[];
         controlPolyPlot=[];
         bezierPlot = [];
-        tangentPlot = [];
+        linesPlot = [];
         clearButton;
         addCurveButton;
         tangentButton;
@@ -128,8 +128,8 @@ classdef GraphicalInterface < handle
             this.controlPolyPlot = [];
             delete(this.bezierPlot);
             this.bezierPlot = [];
-            delete(this.tangentPlot);
-            this.tangentPlot=[];
+            delete(this.linesPlot);
+            this.linesPlot=[];
             this.application.userInteractionAgent.drawNewCurve();
         end
         
@@ -176,9 +176,14 @@ classdef GraphicalInterface < handle
             object.YData=newPos(2);
         end
         
-        function plotTangent(this,line,curveIndex)
-           this.tangentPlot(curveIndex,end+1) = plot(line(1,:),line(2,:));
-           uistack(this.tangentPlot(curveIndex,end),'bottom');
+        function plotLine(this,line,curveIndex)
+           this.linesPlot(curveIndex,end+1) = plot(line(1,:),line(2,:));
+           uistack(this.linesPlot(curveIndex,end),'bottom');
+        end
+        
+        function clearLines(this,curveIndex) 
+           delete(this.linesPlot(curveIndex));
+           this.linesPlot(curveIndex) = [];
         end
     end
     

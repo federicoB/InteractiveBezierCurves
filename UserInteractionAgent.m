@@ -70,6 +70,9 @@ classdef UserInteractionAgent < handle
             fig.WindowButtonMotionFcn = {@this.controlPointMoved,src,controlPointIndex,curveIndex};
             %set a listener for mouse button relase event
             fig.WindowButtonUpFcn = @this.dropObject;
+            %get graphical interface
+            graphicalInterface = this.application.graphicalInterface;
+            graphicalInterface.clearLines(curveIndex);
         end
         
         %called on drag of control point
@@ -164,15 +167,12 @@ classdef UserInteractionAgent < handle
             x = clickedPosition(1);
             y = clickedPosition(2);
             bezierCurve = this.application.bezierCurves(curveIndex);
-%             if (tangent==1) 
-%                 line = bezierCurve.getTangent(x,y);
-%             else
-%                line = bezierCurve.getNormal(x,y); 
-%             end
-            line = bezierCurve.getTangent(x,y);
-            this.application.graphicalInterface.plotTangent(line,curveIndex);
-            line = bezierCurve.getNormal(x,y); 
-            this.application.graphicalInterface.plotTangent(line,curveIndex);
+            if (tangent==1) 
+                line = bezierCurve.getTangent(x,y);
+            else
+               line = bezierCurve.getNormal(x,y); 
+            end
+            this.application.graphicalInterface.plotLine(line,curveIndex);
         end
         
         
