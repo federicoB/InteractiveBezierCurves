@@ -76,19 +76,7 @@ classdef UserInteractionAgent < handle
         function controlPointMoved(this,figureHandler,~,object,controlPointIndex,curveIndex)
             %get the current position of the mouse
             newPos = get(figureHandler,'CurrentPoint');
-            %get current axes handler
-            ax=gca;
-            %get the pixel position and dimension of the axes
-            axesPosition = get(ax,'Position');
-            %axesPosition is an array of 4 element x,y,width and height
-            width = axesPosition(3);
-            height = axesPosition(4);
-            %calculate pixel offset related to axes position
-            newPos(1) = newPos(1) - axesPosition(1);
-            newPos(2) = newPos(2) - axesPosition(2);
-            %map pixel position to cartesian position
-            newPos(1) = newPos(1)/width;
-            newPos(2) = newPos(2)/height;
+            newPos = this.getAxesPosition(newPos);
             %get graphical interface
             graphicalInterface = this.application.graphicalInterface;
             %move the graphical point on the axes
@@ -104,6 +92,23 @@ classdef UserInteractionAgent < handle
                 %move also the last control point
                 this.moveCurveGeneratorsPoints(newPos,lastIndex,curveIndex);
             end
+        end
+        
+        function correctPosition = getAxesPosition(this,absolutePosition)
+             %get current axes handler
+            ax=gca;
+            %get the pixel position and dimension of the axes
+            axesPosition = get(ax,'Position');
+            %axesPosition is an array of 4 element x,y,width and height
+            width = axesPosition(3);
+            height = axesPosition(4);
+            %calculate pixel offset related to axes position
+            absolutePosition(1) = absolutePosition(1) - axesPosition(1);
+            absolutePosition(2) = absolutePosition(2) - axesPosition(2);
+            %map pixel position to cartesian position
+            absolutePosition(1) = absolutePosition(1)/width;
+            absolutePosition(2) = absolutePosition(2)/height;
+            correctPosition = absolutePosition;
         end
        
         
@@ -122,7 +127,7 @@ classdef UserInteractionAgent < handle
         end
         
         %called after clicked on a control point and relased the mouse button.
-        function dropObject(this,~,~)
+        function dropObject(~,~,~)
             %get current figure handler
             fig = gcf;
             %remove listener for mouse move event
@@ -130,6 +135,40 @@ classdef UserInteractionAgent < handle
             %remove listener for mouse button relase event
             fig.WindowButtonUpFcn = '';
         end
+        
+        function enterTangentMode(this)
+             %get graphical interface
+            graphicalInterface = this.application.graphicalInterface;
+            graphicalInterface.hideControls();
+            bezierPlot = graphicalInterface.bezierPlot;
+            for i= 1:length(bezierPlot)
+               set(bezierPlot(i),'ButtonDownFcn',{@this.curveClicked,1,i});
+            end
+        end
+        
+        function enterNormalMode(this)
+            %get graphical interface
+            graphicalInterface = this.application.graphicalInterface;
+            graphicalInterface.hideControls();
+            bezierPlot = graphicalInterface.bezierPlot;
+            for i= 1:length(bezierPlot)
+               set(bezierPlot(i),'ButtonDownFcn',{@this.curveClicked,0,i});
+            end
+        end
+        
+        %tangent=1 if user asked for tangent, 0 for normal
+        function curveClicked(this,src,event,tangent,curveIndex)
+            %get the position of the click
+            clickedPosition = get(gcf,'CurrentPoint');
+            clickedPosition = this.getAxesPosition(clickedPosition);
+            x = clickedPosition(1);
+            y = clickedPosition(2);
+            bezierCurve = this.application.bezierCurves(curveIndex);
+            tangent = bezierCurve.getTangent(x,y);
+            this.application.graphicalInterface.plotTangent(tangent,curveIndex);
+        end
+        
+        
     end
     
 end

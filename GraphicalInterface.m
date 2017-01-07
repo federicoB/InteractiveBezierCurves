@@ -6,7 +6,8 @@ classdef GraphicalInterface < handle
         application;
         controlPointsPlot=[];
         controlPolyPlot=[];
-        bezierPlot;
+        bezierPlot = [];
+        tangentPlot = [];
         clearButton;
         addCurveButton;
         tangentButton;
@@ -42,7 +43,7 @@ classdef GraphicalInterface < handle
             currentAxis.Position = [150 110 400 400];
             %define clear button but set to invisible for now
             this.clearButton = uicontrol('Style', 'pushbutton', 'String', 'Clear','Position', [20 30 60 30],...
-                'Callback', @(src,event)this.clearAllCurves,...
+                'Callback', @(src,event)this.clearAllPlot,...
                 'Visible','off');
             %define button for adding a curve, but hide it for now
             this.addCurveButton = uicontrol('Style', 'pushbutton', 'String', 'Add curve','Position', [20 60 90 30],...
@@ -50,9 +51,11 @@ classdef GraphicalInterface < handle
                 'Visible','off');
             %define button for showing tangent, but hide it for now
             this.tangentButton = uicontrol('Style', 'pushbutton', 'String', 'Tangent','Position', [20 90 90 30],...
+                'Callback',@(src,event)this.application.userInteractionAgent.enterTangentMode,...
                 'Visible','off');
             %define button for showing normal, but hide it for now
             this.normalButton = uicontrol('Style', 'pushbutton', 'String', 'Normal','Position', [20 120 90 30],...
+                'Callback',@(src,event)this.application.userInteractionAgent.enterNormalMode,...
                 'Visible','off');
             this.hideControlsButton = uicontrol('Style', 'pushbutton', 'String', 'HideControls','Position', [20 150 90 30],...
                 'Visible','off','Callback',@(src,event)this.hideControls);
@@ -116,11 +119,12 @@ classdef GraphicalInterface < handle
             end
         end
         
-        function clearAllCurves(this);
+        function clearAllPlot(this);
             this.application.clearCurves();
             cellfun(@(tag) this.deleteControlPoint(tag),this.controlPointsPlot);
             delete(this.controlPolyPlot);
             delete(this.bezierPlot);
+            delete(this.tangentPlot);
             this.application.userInteractionAgent.drawNewCurve();
         end
         
@@ -165,6 +169,10 @@ classdef GraphicalInterface < handle
             %update control point "plot"
             object.XData=newPos(1);
             object.YData=newPos(2);
+        end
+        
+        function plotTangent(this,line,curveIndex)
+           this.tangentPlot(curveIndex) = plot(line(1,:),line(2,:));
         end
     end
     
