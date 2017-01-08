@@ -139,28 +139,19 @@ classdef UserInteractionAgent < handle
             fig.WindowButtonUpFcn = '';
         end
         
-        function enterTangentMode(this)
-             %get graphical interface
-            graphicalInterface = this.application.graphicalInterface;
-            graphicalInterface.hideControls();
-            bezierPlot = graphicalInterface.bezierPlot;
-            for i= 1:length(bezierPlot)
-               set(bezierPlot(i),'ButtonDownFcn',{@this.curveClicked,1,i});
-            end
-        end
-        
-        function enterNormalMode(this)
+        function enterCurveSelectionMode(this,mode)
             %get graphical interface
             graphicalInterface = this.application.graphicalInterface;
             graphicalInterface.hideControls();
             bezierPlot = graphicalInterface.bezierPlot;
             for i= 1:length(bezierPlot)
-               set(bezierPlot(i),'ButtonDownFcn',{@this.curveClicked,0,i});
+               set(bezierPlot(i),'ButtonDownFcn',{@this.curveClicked,mode,i});
             end
+            graphicalInterface.setInstruction(mode);
         end
         
-        %tangent=1 if user asked for tangent, 0 for normal , 2 for length
-        function curveClicked(this,src,event,mode,curveIndex)
+        %mode=0 if user asked for tangent, 1 for normal , 2 for length
+        function curveClicked(this,~,~,mode,curveIndex)
             %get the position of the click
             clickedPosition = get(gcf,'CurrentPoint');
             clickedPosition = this.getAxesPosition(clickedPosition);
@@ -168,10 +159,10 @@ classdef UserInteractionAgent < handle
             y = clickedPosition(2);
             bezierCurve = this.application.bezierCurves(curveIndex);
             switch mode
-                case 1
+                case 0
                     line = bezierCurve.getTangent(x,y);
                     this.application.graphicalInterface.plotLine(line,curveIndex);
-                case 0
+                case 1
                     line = bezierCurve.getNormal(x,y);
                     this.application.graphicalInterface.plotLine(line,curveIndex);
                 case 2
@@ -179,18 +170,7 @@ classdef UserInteractionAgent < handle
                     this.application.graphicalInterface.displayValue(length);
             end
         end
-        
-        function calculateLength(this)
-            %get graphical interface
-            graphicalInterface = this.application.graphicalInterface;
-            graphicalInterface.hideControls();
-            bezierPlot = graphicalInterface.bezierPlot;
-            for i= 1:length(bezierPlot)
-               set(bezierPlot(i),'ButtonDownFcn',{@this.curveClicked,2,i});
-            end
-        end
-        
-        
+                
     end
     
 end

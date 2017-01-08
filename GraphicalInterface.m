@@ -52,15 +52,15 @@ classdef GraphicalInterface < handle
                 'Visible','off');
             %define button for showing tangent, but hide it for now
             this.tangentButton = uicontrol('Style', 'pushbutton', 'String', 'Tangent','Position', [20 90 90 30],...
-                'Callback',@(src,event)this.application.userInteractionAgent.enterTangentMode,...
+                'Callback',{@(src,event)this.application.userInteractionAgent.enterCurveSelectionMode(0)},...
                 'Visible','off');
             %define button for showing normal, but hide it for now
             this.normalButton = uicontrol('Style', 'pushbutton', 'String', 'Normal','Position', [20 120 90 30],...
-                'Callback',@(src,event)this.application.userInteractionAgent.enterNormalMode,...
+                'Callback',{@(src,event)this.application.userInteractionAgent.enterCurveSelectionMode(1)},...
                 'Visible','off');
             %define button for calculate length of the curve, but hide it for now
             this.lengthButton = uicontrol('Style', 'pushbutton', 'String', 'Length','Position', [20 150 90 30],...
-                'Callback',@(src,event)this.application.userInteractionAgent.calculateLength,...
+                'Callback',{@(src,event)this.application.userInteractionAgent.enterCurveSelectionMode(2)},...
                 'Visible','off');
             this.hideControlsButton = uicontrol('Style', 'pushbutton', 'String', 'HideControls','Position', [20 180 90 30],...
                 'Visible','off','Callback',@(src,event)this.hideControls);
@@ -70,8 +70,7 @@ classdef GraphicalInterface < handle
         
         function enterDrawingMode(this)
             %set istructions for the user
-            this.textInstructions.String = {'Left mouse click for define a control point',...
-                'Central mouse button for ending draw a closed curve or right mouse button for open curve'};
+            this.setInstruction(3);
             %set clear button and add button to invisible during drawing
             this.clearButton.Visible = 'off';
             this.addCurveButton.Visible = 'off';
@@ -98,7 +97,7 @@ classdef GraphicalInterface < handle
             this.hideControlsButton.Visible = 'on';
             this.lengthButton.Visible = 'on';
             %modify instructions
-            this.textInstructions.String = 'Drag and drop a control point for modify the curve';
+            this.setInstruction(4);
         end
         
         %plot bezier curve with control polygonal given a set of points
@@ -159,6 +158,7 @@ classdef GraphicalInterface < handle
             end
             this.hideControlsButton.String='Show';
             this.hideControlsButton.Callback=@(src,event)this.showControls;
+            this.setInstruction(5);
         end
         
         function showControls(this)
@@ -175,6 +175,7 @@ classdef GraphicalInterface < handle
             end
             this.hideControlsButton.String='Hide';
             this.hideControlsButton.Callback=@(src,event)this.hideControls;
+            this.setInstruction(4);
         end
         
         function movePlotPoint(~,newPos,object)
@@ -199,7 +200,24 @@ classdef GraphicalInterface < handle
             end
             msgbox(value);
         end
+        
+        function setInstruction(this,mode)
+            switch mode
+                case 0 
+                    this.textInstructions.String = 'Click on a point of a curve for showing the tangent line to that point';
+                case 1
+                    this.textInstructions.String = 'Click on a point of a curve for showing the normal line to that point';
+                case 2
+                    this.textInstructions.String = 'Click on curve to get its length';
+                case 3
+                    this.textInstructions.String = {'Left mouse click for define a control point',...
+                        'Central mouse button for ending draw a closed curve or right mouse button for open curve'};
+                case 4
+                    this.textInstructions.String = 'Drag and drop a control point for modify the curve';
+                case 5
+                    this.textInstructions.String = '';
+            end
+        end
     end
-    
 end
 
