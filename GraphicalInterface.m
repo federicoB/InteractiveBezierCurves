@@ -192,6 +192,13 @@ classdef GraphicalInterface < handle
            delete(this.linesPlot(curveIndex));
            this.linesPlot(curveIndex) = [];
         end
+        
+        function displayValue(~,value)
+            if (isnumeric(value))
+                value = num2str(value);
+            end
+            msgbox(value);
+        end
     end
     
 end

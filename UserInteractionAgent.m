@@ -159,20 +159,35 @@ classdef UserInteractionAgent < handle
             end
         end
         
-        %tangent=1 if user asked for tangent, 0 for normal
-        function curveClicked(this,src,event,tangent,curveIndex)
+        %tangent=1 if user asked for tangent, 0 for normal , 2 for length
+        function curveClicked(this,src,event,mode,curveIndex)
             %get the position of the click
             clickedPosition = get(gcf,'CurrentPoint');
             clickedPosition = this.getAxesPosition(clickedPosition);
             x = clickedPosition(1);
             y = clickedPosition(2);
             bezierCurve = this.application.bezierCurves(curveIndex);
-            if (tangent==1) 
-                line = bezierCurve.getTangent(x,y);
-            else
-               line = bezierCurve.getNormal(x,y); 
+            switch mode
+                case 1
+                    line = bezierCurve.getTangent(x,y);
+                    this.application.graphicalInterface.plotLine(line,curveIndex);
+                case 0
+                    line = bezierCurve.getNormal(x,y);
+                    this.application.graphicalInterface.plotLine(line,curveIndex);
+                case 2
+                    length = bezierCurve.getLength();
+                    this.application.graphicalInterface.displayValue(length);
             end
-            this.application.graphicalInterface.plotLine(line,curveIndex);
+        end
+        
+        function calculateLength(this)
+            %get graphical interface
+            graphicalInterface = this.application.graphicalInterface;
+            graphicalInterface.hideControls();
+            bezierPlot = graphicalInterface.bezierPlot;
+            for i= 1:length(bezierPlot)
+               set(bezierPlot(i),'ButtonDownFcn',{@this.curveClicked,2,i});
+            end
         end
         
         
