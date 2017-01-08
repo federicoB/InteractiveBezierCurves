@@ -157,15 +157,16 @@ classdef UserInteractionAgent < handle
             clickedPosition = this.getAxesPosition(clickedPosition);
             x = clickedPosition(1);
             y = clickedPosition(2);
+            %get selected bezier curve
             bezierCurve = this.application.bezierCurves(curveIndex);
             switch mode
-                case 0
+                case 0 %tangent mode
                     line = bezierCurve.getTangent(x,y);
                     this.application.graphicalInterface.plotLine(line,curveIndex);
-                case 1
+                case 1 %normal mode
                     line = bezierCurve.getNormal(x,y);
                     this.application.graphicalInterface.plotLine(line,curveIndex);
-                case 2
+                case 2 %length mode
                     length = bezierCurve.getLength();
                     this.application.graphicalInterface.displayValue(length);
             end

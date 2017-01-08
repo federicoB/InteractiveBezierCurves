@@ -1,6 +1,5 @@
 classdef GraphicalInterface < handle
-    %GRAPHICALINTERFACE Summary of this class goes here
-    %   Detailed explanation goes here
+    %GRAPHICALINTERFACE Manage the interface of the application
     
     properties
         application;
@@ -66,6 +65,8 @@ classdef GraphicalInterface < handle
                 'Visible','off','Callback',@(src,event)this.hideControls);
             %define text for giving istruction to the user
             this.textInstructions = uicontrol('Style','text','Position',[150 0 400 80],'HorizontalAlignment','left');
+            %set hold state to on so adding new points doesn't delete old points
+            hold on;
         end
         
         function enterDrawingMode(this)
@@ -90,6 +91,7 @@ classdef GraphicalInterface < handle
         function exitDrawingMode(this)
             %after a curve is drawn, set to visible the clear button
             this.clearButton.Visible='on';
+            %display all the button for features related to drawed curves
             %and the add curve button
             this.addCurveButton.Visible='on';
             this.tangentButton.Visible = 'on';
@@ -128,7 +130,9 @@ classdef GraphicalInterface < handle
         function clearAllPlot(this)
             %clear everything except this
             this.application.clearCurves();
+            %delete all the control point graphic object
             cellfun(@(tag) this.deleteControlPoint(tag),this.controlPointsPlot);
+            %empties array
             this.controlPointsPlot=[];
             delete(this.controlPolyPlot);
             this.controlPolyPlot = [];
@@ -136,15 +140,19 @@ classdef GraphicalInterface < handle
             this.bezierPlot = [];
             delete(this.linesPlot);
             this.linesPlot=[];
+            %enter mode for drawing new curve
             this.application.userInteractionAgent.drawNewCurve();
         end
         
-        function deleteControlPoint(this,tag)
+        function deleteControlPoint(~,tag)
+            %find object given its tag
             obj=findobj('Tag',tag);
+            %delete graphic object
             delete(obj);
         end
         
         function hideControls(this)
+            %iterate through the point and set Visible to off
             cellfun(@hideControlPoint,this.controlPointsPlot);
             function hideControlPoint(tag)
                 if (ischar(tag)) 
@@ -152,16 +160,20 @@ classdef GraphicalInterface < handle
                     obj.Visible='off';
                 end
             end
+            %iterate through the curves and hide polygonal
             arrayfun(@hidePolygonals,this.controlPolyPlot);
             function hidePolygonals(polygonal)
                 set(polygonal,'Visible','off');
             end
+            %change button string
             this.hideControlsButton.String='Show';
+            %set 'show' callback on button click
             this.hideControlsButton.Callback=@(src,event)this.showControls;
             this.setInstruction(5);
         end
         
         function showControls(this)
+            %iterate through the point and set Visible to on
             cellfun(@showControls,this.controlPointsPlot);
             function showControls(tag)
                 if (ischar(tag)) 
@@ -169,11 +181,14 @@ classdef GraphicalInterface < handle
                     obj.Visible='on';
                 end
             end
+            %iterate through the curves and show polygonal
             arrayfun(@hidePolygonals,this.controlPolyPlot);
             function hidePolygonals(polygonal)
                 set(polygonal,'Visible','on');
             end
+            %change button string
             this.hideControlsButton.String='Hide';
+            %set 'hide' callback on button click
             this.hideControlsButton.Callback=@(src,event)this.hideControls;
             this.setInstruction(4);
         end
@@ -185,36 +200,47 @@ classdef GraphicalInterface < handle
         end
         
         function plotLine(this,line,curveIndex)
+            %plot the given point
            this.linesPlot(curveIndex,end+1) = plot(line(1,:),line(2,:));
+           %set to minimum z-index so the user can click in the same point
+           %for the normal/tangent.
            uistack(this.linesPlot(curveIndex,end),'bottom');
         end
         
-        function clearLines(this,curveIndex) 
+        %called on curve modify 
+        function clearLines(this,curveIndex)
+           %delete all the tangents and normals
            delete(this.linesPlot(curveIndex));
+           %empties array
            this.linesPlot(curveIndex) = [];
         end
         
+        %display a message box with the given value
         function displayValue(~,value)
+            %if the value is numeric
             if (isnumeric(value))
+                %convert it to string
                 value = num2str(value);
             end
+            %show the value in a message box
             msgbox(value);
         end
         
+        %change instruction for the use
         function setInstruction(this,mode)
             switch mode
-                case 0 
+                case 0 %tangent mode
                     this.textInstructions.String = 'Click on a point of a curve for showing the tangent line to that point';
-                case 1
+                case 1 %normal mode
                     this.textInstructions.String = 'Click on a point of a curve for showing the normal line to that point';
-                case 2
+                case 2 %length mode
                     this.textInstructions.String = 'Click on curve to get its length';
-                case 3
+                case 3 %drawing mode
                     this.textInstructions.String = {'Left mouse click for define a control point',...
                         'Central mouse button for ending draw a closed curve or right mouse button for open curve'};
-                case 4
+                case 4 %drag and drop mode
                     this.textInstructions.String = 'Drag and drop a control point for modify the curve';
-                case 5
+                case 5 %nothing mode
                     this.textInstructions.String = '';
             end
         end
