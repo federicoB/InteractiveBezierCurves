@@ -57,14 +57,17 @@ classdef BezierCurve < handle
         end
         
         function value=getLength(this)
-            value = integral(@(x) myfun(this,x),0,1,'ArrayValued',true);
-            function val = myfun(this,x)
+            function val = funToIntegrate(this,x)
                 %mapping
                 index = round((x*(this.numberOfEvaluationPoints-1))+1);
                 xderiv = this.xDerivative(index);
                 yderiv = this.yDerivative(index);
                 val = norm([xderiv,yderiv]);
             end
+            fa = funToIntegrate(this,0);
+            fb = funToIntegrate(this,1);
+            trapez = trapezoid(0,1,fa,fb);
+            value = trapezoid_adapt(@(x) funToIntegrate(this,x),0,1,fa,fb,0.001,trapez);  
         end
         
     end
