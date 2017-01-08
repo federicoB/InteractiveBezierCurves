@@ -60,14 +60,10 @@ classdef BezierCurve < handle
             value = integral(@(x) myfun(this,x),0,1,'ArrayValued',true);
             function val = myfun(this,x)
                 %mapping
-                index = round(x*this.numberOfEvaluationPoints);
-                if (index<=this.numberOfEvaluationPoints-1 && index>0) 
-                    xderiv = this.xDerivative(index); 
-                    yderiv = this.yDerivative(index);
-                    val = norm([xderiv,yderiv]);
-                else 
-                    val = 0;
-                end
+                index = round((x*(this.numberOfEvaluationPoints-1))+1);
+                xderiv = this.xDerivative(index);
+                yderiv = this.yDerivative(index);
+                val = norm([xderiv,yderiv]);
             end
         end
         
